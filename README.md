@@ -15,7 +15,7 @@ A **LocPay** é uma fintech focada no mercado de locação imobiliária, oferece
 Atuamos para descomplicar a gestão financeira de aluguéis, tornando os repasses mais rápidos, previsíveis e inteligentes, conectando tecnologia, segurança e experiência do usuário.
 
 <div align="center">
-  <img src="readme-assets/data.png" width="500" />
+  <img src="readme-assets/data.png" />
 </div>
 
 ---
@@ -96,7 +96,7 @@ Seu backend deve expor **endpoints REST** que permitam:
 3. **Lógica de negócio:** implemente as funções para calcular `fee` e `net_value`, e atualizar o status.  
 4. **Rotas:** crie os endpoints descritos na seção anterior.  
 5. **Teste localmente:** use o Postman, Insomnia ou cURL para validar seus endpoints.  
-6. **Documentação:** finalize o README com instruções claras de execução e exemplos de requests/responses.
+6. **Documentação:** Crie um arquivo `solucao.md` com instruções claras de execução e exemplos de requests/responses.
 
 ### Tempo sugerido
 
@@ -112,15 +112,15 @@ Para facilitar seu início, o repositório já vem com **dois templates**:
 - `nestjs-template/` → NestJS + Prisma + SQLite  
 - `express-template/` → ExpressJS + SQLite  
 
-Você não precisa escolher manualmente — usamos um script interativo para isso.
+Você não precisa escolher manualmente, temos um script interativo para isso.
 
 ### Passos iniciais
 
 1. Clone o repositório e entre na pasta:
 
    ```bash
-   git clone https://github.com/locpayltda/locpay-tech-challenge.git
-   cd locpay-tech-challenge
+   git clone https://github.com/locpayltda/summer-tech-challenge-2025.git
+   cd summer-tech-challenge-2025
    ```
 
 2. Rode o script de inicialização:
@@ -177,7 +177,8 @@ Para garantir igualdade entre os participantes, siga atentamente as regras abaix
 Para entregar seu desafio, você precisa seguir os passos abaixo, leia atentamente:
 
 - O prazo para entrega está descrito no e-mail recebido convocando para a fase de desafio técnico.
-- Repositórios privados não serão considerados garanta que seu repositório esteja **público**.
+- Crie um arquivo `solucao.md` com instruções claras de execução e exemplos de requests/responses.
+- Repositórios privados não serão considerados, garanta que seu repositório esteja **público**.
 - Envie o link do seu repositório **público** para: `tech@locpay.com.br` com o assunto: `[Summer Job 2025] Entrega Case Técnico`
 
 ---
