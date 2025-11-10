@@ -1,194 +1,188 @@
-# 💙 LocPay Tech Challenge - Summer Job 2025
+﻿# 💙 LocPay API - Sistema de Antecipação de Recebíveis
 
-Bem-vindo(a) ao **LocPay Tech Challenge**, o case técnico da segunda fase do processo seletivo para o **Summer Job 2025**.
+> **API RESTful** para gerenciamento de operações de antecipação de recebíveis, desenvolvida como solução para o **LocPay Tech Challenge - Summer Job 2025**.
 
-Este desafio foi criado para avaliar sua capacidade de entender um problema de negócio, estruturar uma **solução técnica simples** e bem organizada, e comunicar suas decisões de forma clara.
-
-Nosso objetivo não é medir o quanto você sabe de frameworks, mas sim avaliar sua **clareza de raciocínio**, qualidade de código e capacidade de transformar um problema real em solução funcional.
+[![Node.js](https://img.shields.io/badge/Node.js-18.x-green)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.x-blue)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![AWS](https://img.shields.io/badge/AWS-Deployed-orange)](https://aws.amazon.com/)
 
 ---
 
-## 🏠 Sobre a LocPay
+## ⚠️ Status da Infraestrutura
 
-A **LocPay** é uma fintech focada no mercado de locação imobiliária, oferecendo soluções de antecipação de recebíveis e automação de repasses para imobiliárias, corretores e proprietários.
+**A infraestrutura AWS está DESLIGADA** para redução de custos.
 
-Atuamos para descomplicar a gestão financeira de aluguéis, tornando os repasses mais rápidos, previsíveis e inteligentes, conectando tecnologia, segurança e experiência do usuário.
+**Para testar a API em produção:**
+-  Entre em contato (no final do documento) para ativar a infraestrutura
+-  Tempo de ativação: ~5 minutos
+-  Infraestrutura: AWS São Paulo (sa-east-1)
+
+**Para testes locais:**
+- Use Docker Compose
+- Comando: `docker-compose up -d`
+
+---
+
+## 🎯 Sobre o Projeto
+
+API para simular **antecipação de recebíveis** para proprietários de imóveis. Permite que recebedores antecipem valores futuros com taxa de 3%.
+
+### Regras de Negócio
+
+- **Taxa**: 3% sobre o valor bruto
+- **Cálculo**: `valor_liquido = valor_bruto - (valor_bruto * 0.03)`
+- **Status**: `pending` (aguardando) ou `confirmed` (confirmado)
+
+---
+
+## 🏗️ Arquitetura
+
+### AWS (Produção)
+
+```
+Internet → ALB (Port 80) → ECS Fargate (2 tasks) → RDS PostgreSQL
+```
+
+**Serviços AWS:**
+- **VPC**: 10.0.0.0/16 (6 subnets, 2 AZs)
+- **ECS Fargate**: 2 containers (512 CPU, 1024 MB)
+- **RDS**: PostgreSQL 15, db.t3.micro, 20GB
+- **ALB**: Application Load Balancer
+- **ECR**: Docker Registry
+- **Secrets Manager**: Credenciais
+- **CloudWatch**: Logs
+
+### Local (Docker Compose)
+
+```
+API Node.js (Port 3000) → PostgreSQL (Port 5432)
+```
+
+---
+
+## 🛠️ Tecnologias
+
+- **Node.js 18** + **Express 4** + **PostgreSQL 15**
+- **Docker** + **Terraform** + **AWS**
+- Bibliotecas: `pg`, `dotenv`, `morgan`
+
+---
+
+## 🚀 Como Executar Localmente
+
+```bash
+# 1. Clonar repositório
+git clone <URL>
+cd summer-tech-challenge-2025
+
+# 2. Iniciar com Docker Compose
+docker-compose up -d
+
+# 3. Testar
+curl http://localhost:3000/health
+```
+
+---
+
+## 📚 API Endpoints
+
+### Health Check
+```bash
+GET /health
+# Resposta: { "status": "ok", "database": "connected" }
+```
+
+### Recebedores
+
+**Listar todos:**
+```bash
+GET /receivers
+```
+
+**Buscar por ID:**
+```bash
+GET /receivers/:id
+```
+
+**Criar recebedor:**
+```bash
+POST /receivers
+Body: { "name": "João Silva" }
+# Resposta: { "message": "Recebedor criado com sucesso!", "receiver": {...} }
+```
+
+### Operações
+
+**Criar operação:**
+```bash
+POST /operations
+Body: { "receiver_id": 1, "gross_amount": 1000.00 }
+# Resposta: { "message": "Operação criada com sucesso! Aguardando confirmação.", ... }
+# Calcula automaticamente: fee = 30.00, net_amount = 970.00
+```
+
+**Confirmar operação:**
+```bash
+POST /operations/:id/confirm
+# Resposta: { "message": "Operação confirmada com sucesso! O saldo foi atualizado.", ... }
+# Credita R$ 970,00 no saldo do recebedor
+```
+
+**Buscar operação:**
+```bash
+GET /operations/:id
+```
+
+### Exemplo Completo (PowerShell)
+
+```powershell
+# Criar recebedor
+$r = @{ name = "João Silva" } | ConvertTo-Json
+$rec = Invoke-RestMethod http://localhost:3000/receivers -Method Post -Body $r -ContentType "application/json"
+
+# Criar operação
+$o = @{ receiver_id = $rec.receiver.id; gross_amount = 1000.00 } | ConvertTo-Json
+$op = Invoke-RestMethod http://localhost:3000/operations -Method Post -Body $o -ContentType "application/json"
+
+# Confirmar
+Invoke-RestMethod "http://localhost:3000/operations/$($op.operation.id)/confirm" -Method Post
+
+# Ver saldo (deve mostrar R$ 970,00)
+Invoke-RestMethod "http://localhost:3000/receivers/$($rec.receiver.id)"
+```
+
+---
+
+## 📁 Estrutura
+
+```
+summer-tech-challenge-2025/
+├── app.js                  # Express app
+├── database.js             # PostgreSQL connection
+├── routes/
+│   ├── receivers.js       # Endpoints recebedores
+│   └── operations.js      # Endpoints operações
+├── infra/                 # Terraform (42 recursos AWS)
+├── docker-compose.yml     # Ambiente local
+├── Dockerfile             # Imagem Docker
+└── package.json           # Dependências
+```
+
+---
+
+## 📞 Contato
+
+**Desenvolvido por:** Enzo Urioste Canavero
+
+- 📧 ecanavero2@gmail.com
+- 📱 +55 (11) 99496-0323
+
+---
 
 <div align="center">
-  <img src="readme-assets/data.png" />
+
+**💙 Feito com dedicação para o LocPay Summer Job 2025**
+
 </div>
-
----
-
-## ☀️ Sobre o Summer Job LocPay 2025
-
-O **Summer Job LocPay** é um programa de curta duração que oferece uma imersão prática em tecnologia, produto e negócios dentro de uma fintech em crescimento.
-
-Durante o programa, os selecionados trabalharão em **projetos reais** com acompanhamento técnico, mentorias e participação em decisões de produto, liderados por um Tech Lead do time da LocPay.
-
-Nosso objetivo é proporcionar **aprendizado real e impacto tangível**.
-
----
-
-## 🧠 Contexto do Desafio
-
-Imagine que você faz parte do time de tecnologia da LocPay.  
-Sua missão é criar uma **API simplificada** que permita simular e gerenciar operações de antecipação de aluguel entre recebedores (proprietários) e a LocPay.
-
-Com isso, buscamos entender como você estrutura uma aplicação de backend, organiza regras de negócio e documenta uma API de forma clara e objetiva.
-
----
-
-## ⚙️ O que você deve construir
-
-Você deve construir um **backend simples**, responsável por armazenar e gerenciar as operações de antecipação.
-
-### Requisitos técnicos
-
-Para o desafio, use apenas o que for necessário.  
-Sugerimos simplificar com **Express ou NestJS + SQLite**, sem filas, Redis ou AWS.
-
-### Banco de dados
-
-Um banco de dados (SQLite, PostgreSQL ou outro relacional) com duas tabelas principais:
-
-1. **Recebedores (`receivers`)**
-   - `id` — identificador único do recebedor  
-   - `name` — nome do recebedor  
-   - `balance` — saldo atual do recebedor (inicia em 0)
-
-2. **Operações (`operations`)**
-   - `id` — identificador único da operação  
-   - `receiver_id` — chave estrangeira para o recebedor  
-   - `gross_value` — valor bruto antecipado  
-   - `fee` — taxa de antecipação (3%)  
-   - `net_value` — valor líquido a ser repassado  
-   - `status` — `"pending"` ou `"confirmed"`
-
-### Fluxo de uso esperado
-
-1. O usuário cria uma operação (`POST /operations`) informando o `receiver_id` e o `gross_value`.
-2. O backend calcula a taxa (`fee = 3%`) e o valor líquido (`net_value = gross_value - fee`).
-3. A operação é salva no banco com status `"pending"`.
-4. Ao chamar `POST /operations/:id/confirm`, o status muda para `"confirmed"` e o `net_value` é somado ao saldo do recebedor.
-
-### O que seu backend deve fazer
-
-Seu backend deve expor **endpoints REST** que permitam:
-
-| Rota | Descrição |
-|------|------------|
-| `POST /operations` | Cria uma nova operação de antecipação. Calcula `fee` e `net_value` automaticamente. |
-| `GET /operations/:id` | Retorna os dados completos de uma operação. |
-| `POST /operations/:id/confirm` | Confirma uma operação e soma o valor líquido ao saldo do recebedor. |
-| `GET /receivers/:id` | Retorna o nome e saldo do recebedor, além do histórico de operações. |
-
-### Regras de negócio
-
-- `fee` = **3%** do valor bruto (`gross_value`).
-- `net_value` = `gross_value - fee`.
-- Status possíveis: `"pending"` e `"confirmed"`.
-
-### Sugestão de como começar
-
-1. **Modelagem:** comece desenhando o banco de dados no [dbdiagram.io](https://dbdiagram.io) para visualizar as relações entre *Recebedor* e *Operação*.  
-2. **Implementação:** transforme o modelo em um schema do **Prisma** (ou similar).  
-3. **Lógica de negócio:** implemente as funções para calcular `fee` e `net_value`, e atualizar o status.  
-4. **Rotas:** crie os endpoints descritos na seção anterior.  
-5. **Teste localmente:** use o Postman, Insomnia ou cURL para validar seus endpoints.  
-6. **Documentação:** Crie um arquivo `solucao.md` com instruções claras de execução e exemplos de requests/responses.
-
-### Tempo sugerido
-
-O desafio foi pensado para ser resolvido em **3 a 4 horas**.  
-Queremos ver seu **melhor raciocínio**, não necessariamente o projeto mais complexo.
-
----
-
-## 🏁 Como começar
-
-Para facilitar seu início, o repositório já vem com **dois templates**:
-
-- `nestjs-template/` → NestJS + Prisma + SQLite  
-- `express-template/` → ExpressJS + SQLite  
-
-Você não precisa escolher manualmente, temos um script interativo para isso.
-
-### Passos iniciais
-
-1. Clone o repositório e entre na pasta:
-
-   ```bash
-   git clone https://github.com/locpayltda/summer-tech-challenge-2025.git
-   cd summer-tech-challenge-2025
-   ```
-
-2. Rode o script de inicialização:
-   - Windows:
-
-    ```bash
-    ./comece-aqui.bat
-    ```
-
-   - Linux/MacOS:
-
-   ```bash
-   chmod +x comece-aqui.sh
-   ./comece-aqui.sh
-   ```
-
-3. Escolha entre:
-    1) NestJS + Prisma
-    2) ExpressJS + SQLite
-
-💡 **Dica**: se algo der errado, basta dar um git restore . ou git clone novamente e rodar o script de novo.
-
----
-
-## 🧮 Avaliação
-
-| Critério | Pontos |
-|-----------|--------|
-| Funcionalidade e rotas principais | 40 |
-| Lógica de negócio correta | 20 |
-| Clareza e organização do código | 20 |
-| Documentação (README e exemplos de uso) | 10 |
-| Extras (testes, Docker, UI simples etc.) | 10 |
-| **Total** | **100 pontos** |
-
----
-
-## ⚖️ Regras do Desafio
-
-Para garantir igualdade entre os participantes, siga atentamente as regras abaixo:
-
-1. **Uso de Inteligência Artificial:**  
-   - É permitido usar IA (como ChatGPT, Copilot etc.) **apenas** para tirar dúvidas conceituais ou revisar código, não para gerar a solução completa automaticamente.  
-   - O objetivo é entender seu raciocínio e estilo de implementação.
-
-2. **Autoria:**  
-   - O código deve ser inteiramente seu.  
-   - Códigos copiados ou plagiados de outros repositórios públicos podem desclassificar a candidatura.
-
----
-
-## ✅ Entrega
-
-Para entregar seu desafio, você precisa seguir os passos abaixo, leia atentamente:
-
-- O prazo para entrega está descrito no e-mail recebido convocando para a fase de desafio técnico.
-- Crie um arquivo `solucao.md` com instruções claras de execução e exemplos de requests/responses.
-- Repositórios privados não serão considerados, garanta que seu repositório esteja **público**.
-- Envie o link do seu repositório **público** para: `tech@locpay.com.br` com o assunto: `[Summer Job 2025] Entrega Case Técnico`
-
----
-
-## 📬 Suporte
-
-Em caso de dúvidas durante o desafio, envie um e-mail para: <tech@locpay.com.br>
-Assunto: `[Summer Job 2025] Dúvida Case Técnico`
-
----
-
-**Boa sorte!** 💙
-Equipe LocPay Tech
