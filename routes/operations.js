@@ -8,14 +8,12 @@ const FEE_PERCENTAGE = 0.03;
 router.post('/', async (req, res) => {
   const { receiver_id, gross_value } = req.body;
 
-  // Validação dos campos obrigatórios
   if (!receiver_id || !gross_value) {
     return res.status(400).json({
       error: 'Você precisa informar o ID do recebedor e o valor bruto da operação.'
     });
   }
 
-  // Validação do valor
   if (typeof gross_value !== 'number' || gross_value <= 0) {
     return res.status(400).json({
       error: 'O valor bruto precisa ser um número positivo.'
@@ -23,7 +21,6 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    // Verifica se o recebedor existe
     const receiverCheck = await db.query(
       'SELECT id FROM receivers WHERE id = $1',
       [receiver_id]
@@ -35,7 +32,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Calcula a taxa (3%) e o valor líquido
     const fee = gross_value * FEE_PERCENTAGE;
     const net_value = gross_value - fee;
 
@@ -73,7 +69,6 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Busca a operação pelo ID
     const result = await db.query(
       'SELECT * FROM operations WHERE id = $1',
       [id]
@@ -111,7 +106,6 @@ router.post('/:id/confirm', async (req, res) => {
   const client = await db.connect();
 
   try {
-    // Inicia uma transação para garantir consistência dos dados
     await client.query('BEGIN');
 
     // Busca a operação

@@ -1,24 +1,19 @@
 const { Pool } = require('pg');
 
-// Configuração da conexão com PostgreSQL RDS
-// As variáveis de ambiente são injetadas pelo ECS Task Definition
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'locpay',
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
-  // SSL/TLS obrigatório para RDS PostgreSQL
   ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false // AWS RDS usa certificados auto-assinados
+    rejectUnauthorized: false 
   } : false,
-  // Configurações de pool de conexões
-  max: 20, // Máximo de conexões no pool
-  idleTimeoutMillis: 30000, // Tempo para fechar conexões inativas
-  connectionTimeoutMillis: 2000, // Tempo limite para novas conexões
+  max: 20, 
+  idleTimeoutMillis: 30000, 
+  connectionTimeoutMillis: 2000, 
 });
 
-// Testa a conexão e inicializa o banco
 pool.connect((err, client, release) => {
   if (err) {
     console.error('Erro ao conectar ao banco de dados PostgreSQL:', err.message);
@@ -30,12 +25,10 @@ pool.connect((err, client, release) => {
   }
 });
 
-// Inicializa as tabelas necessárias
 async function initializeDatabase() {
   const client = await pool.connect();
   
   try {
-    // Tabela de recebedores
     await client.query(`
       CREATE TABLE IF NOT EXISTS receivers (
         id SERIAL PRIMARY KEY,
@@ -45,7 +38,6 @@ async function initializeDatabase() {
     `);
     console.log('Tabela receivers criada/verificada com sucesso.');
 
-    // Tabela de operações
     await client.query(`
       CREATE TABLE IF NOT EXISTS operations (
         id SERIAL PRIMARY KEY,
@@ -60,7 +52,6 @@ async function initializeDatabase() {
     `);
     console.log('Tabela operations criada/verificada com sucesso.');
 
-    // Índices para melhor performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_operations_receiver_id 
       ON operations(receiver_id)
@@ -82,7 +73,6 @@ async function initializeDatabase() {
   }
 }
 
-// Graceful shutdown - fecha o pool ao encerrar a aplicação
 process.on('SIGTERM', () => {
   console.log('SIGTERM recebido, fechando pool de conexões...');
   pool.end(() => {
