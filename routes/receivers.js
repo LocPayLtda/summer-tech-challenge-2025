@@ -2,15 +2,14 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
-/**
- * POST /receivers
- * Cria um novo recebedor
- */
+// POST /receivers - Cria um novo recebedor
 router.post('/', async (req, res) => {
   const { name } = req.body;
 
   if (!name) {
-    return res.status(400).json({ error: 'name é obrigatório' });
+    return res.status(400).json({ 
+      error: 'O nome do recebedor é obrigatório.' 
+    });
   }
 
   try {
@@ -20,37 +19,39 @@ router.post('/', async (req, res) => {
     );
 
     res.status(201).json({
-      id: result.rows[0].id,
-      name: result.rows[0].name,
-      balance: parseFloat(result.rows[0].balance)
+      message: 'Recebedor criado com sucesso.',
+      receiver: {
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        balance: parseFloat(result.rows[0].balance)
+      }
     });
   } catch (err) {
     console.error('Erro ao criar recebedor:', err);
-    return res.status(500).json({ error: 'Erro ao criar recebedor' });
+    return res.status(500).json({ 
+      error: 'Ocorreu um erro ao criar o recebedor. Tente novamente.' 
+    });
   }
 });
 
-/**
- * GET /receivers/:id
- * Retorna o nome e saldo do recebedor, além do histórico de operações
- */
+// GET /receivers/:id - Retorna dados do recebedor e histórico de operações
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Busca o recebedor
     const receiverResult = await db.query(
       'SELECT * FROM receivers WHERE id = $1',
       [id]
     );
 
     if (receiverResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Recebedor não encontrado' });
+      return res.status(404).json({ 
+        error: 'Recebedor não encontrado' 
+      });
     }
 
     const receiver = receiverResult.rows[0];
 
-    // Busca o histórico de operações do recebedor
     const operationsResult = await db.query(
       'SELECT * FROM operations WHERE receiver_id = $1 ORDER BY created_at DESC',
       [id]
@@ -71,14 +72,13 @@ router.get('/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Erro ao buscar recebedor:', err);
-    return res.status(500).json({ error: 'Erro ao buscar recebedor' });
+    return res.status(500).json({ 
+      error: "Ocorreu um erro ao buscar o recebedor.' 
+    });
   }
 });
 
-/**
- * GET /receivers
- * Lista todos os recebedores
- */
+// GET /receivers - Lista todos os recebedores
 router.get('/', async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM receivers');
@@ -90,7 +90,9 @@ router.get('/', async (req, res) => {
     })));
   } catch (err) {
     console.error('Erro ao buscar recebedores:', err);
-    return res.status(500).json({ error: 'Erro ao buscar recebedores' });
+    return res.status(500).json({ 
+      error: 'Ocorreu um erro ao buscar os recebedores.' 
+    });
   }
 });
 
