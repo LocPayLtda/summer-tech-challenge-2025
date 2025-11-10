@@ -1,4 +1,4 @@
-﻿#  LocPay API - Sistema de Antecipação de Recebíveis
+﻿# 💙 LocPay API - Sistema de Antecipação de Recebíveis
 
 > **API RESTful** para gerenciamento de operações de antecipação de recebíveis, desenvolvida como solução para o **LocPay Tech Challenge - Summer Job 2025**.
 
@@ -10,7 +10,7 @@
 
 ---
 
-##  Status da Infraestrutura
+## ⚠️ Status da Infraestrutura
 
 **A infraestrutura AWS está DESLIGADA** para redução de custos.
 
@@ -21,58 +21,58 @@
 
 **Para testes locais:**
 - Use Docker Compose
-- Comando: docker-compose up -d
+- Comando: `docker-compose up -d`
 
 ---
 
-##  Sobre o Projeto
+## 🎯 Sobre o Projeto
 
 API para simular **antecipação de recebíveis** para proprietários de imóveis. Permite que recebedores antecipem valores futuros com taxa de 3%.
 
 ### Regras de Negócio
 
 - **Taxa**: 3% sobre o valor bruto
-- **Cálculo**: valor_liquido = valor_bruto - (valor_bruto * 0.03)
-- **Status**: pending (aguardando) ou confirmed (confirmado)
+- **Cálculo**: `valor_liquido = valor_bruto - (valor_bruto * 0.03)`
+- **Status**: `pending` (aguardando) ou `confirmed` (confirmado)
 
 ---
 
-##  Arquitetura
+## 🏗️ Arquitetura
 
 ### AWS (Produção)
 
-`
-Internet  ALB (Port 80)  ECS Fargate (2 tasks)  RDS PostgreSQL
-`
+```
+Internet → ALB (Port 80) → ECS Fargate (2 tasks) → RDS PostgreSQL
+```
 
 **Serviços AWS:**
-- VPC: 10.0.0.0/16 (6 subnets, 2 AZs)
-- ECS Fargate: 2 containers (512 CPU, 1024 MB)
-- RDS: PostgreSQL 15, db.t3.micro, 20GB
-- ALB: Application Load Balancer
-- ECR: Docker Registry
-- Secrets Manager: Credenciais
-- CloudWatch: Logs
+- **VPC**: 10.0.0.0/16 (6 subnets, 2 AZs)
+- **ECS Fargate**: 2 containers (512 CPU, 1024 MB)
+- **RDS**: PostgreSQL 15, db.t3.micro, 20GB
+- **ALB**: Application Load Balancer
+- **ECR**: Docker Registry
+- **Secrets Manager**: Credenciais
+- **CloudWatch**: Logs
 
 ### Local (Docker Compose)
 
-`
-API Node.js (Port 3000)  PostgreSQL (Port 5432)
-`
+```
+API Node.js (Port 3000) → PostgreSQL (Port 5432)
+```
 
 ---
 
-##  Tecnologias
+## 🛠️ Tecnologias
 
 - **Node.js 18** + **Express 4** + **PostgreSQL 15**
 - **Docker** + **Terraform** + **AWS**
-- Bibliotecas: pg, dotenv, morgan
+- Bibliotecas: `pg`, `dotenv`, `morgan`
 
 ---
 
-##  Como Executar Localmente
+## 🚀 Como Executar Localmente
 
-`Bash
+```bash
 # 1. Clonar repositório
 git clone <URL>
 cd summer-tech-challenge-2025
@@ -82,116 +82,107 @@ docker-compose up -d
 
 # 3. Testar
 curl http://localhost:3000/health
-`
+```
 
 ---
 
-##  API Endpoints
+## 📚 API Endpoints
 
 ### Health Check
-`Bash
+```bash
 GET /health
 # Resposta: { "status": "ok", "database": "connected" }
-`
+```
 
 ### Recebedores
 
 **Listar todos:**
-`Bash
+```bash
 GET /receivers
-`
+```
 
 **Buscar por ID:**
-`Bash
+```bash
 GET /receivers/:id
-`
+```
 
 **Criar recebedor:**
-`Bash
+```bash
 POST /receivers
 Body: { "name": "João Silva" }
 # Resposta: { "message": "Recebedor criado com sucesso!", "receiver": {...} }
-`
+```
 
 ### Operações
 
 **Criar operação:**
-`Bash
+```bash
 POST /operations
 Body: { "receiver_id": 1, "gross_amount": 1000.00 }
 # Resposta: { "message": "Operação criada com sucesso! Aguardando confirmação.", ... }
 # Calcula automaticamente: fee = 30.00, net_amount = 970.00
-`
+```
 
 **Confirmar operação:**
-`Bash
+```bash
 POST /operations/:id/confirm
 # Resposta: { "message": "Operação confirmada com sucesso! O saldo foi atualizado.", ... }
 # Credita R$ 970,00 no saldo do recebedor
-`
+```
 
 **Buscar operação:**
-`Bash
+```bash
 GET /operations/:id
-`
+```
 
 ### Exemplo Completo (PowerShell)
 
-`powershell
+```powershell
 # Criar recebedor
- = @{ name = "João Silva" } | ConvertTo-Json
- = Invoke-RestMethod http://localhost:3000/receivers -Method Post -Body  -ContentType "application/json"
+$r = @{ name = "João Silva" } | ConvertTo-Json
+$rec = Invoke-RestMethod http://localhost:3000/receivers -Method Post -Body $r -ContentType "application/json"
 
 # Criar operação
- = @{ receiver_id = .receiver.id; gross_amount = 1000.00 } | ConvertTo-Json
- = Invoke-RestMethod http://localhost:3000/operations -Method Post -Body  -ContentType "application/json"
+$o = @{ receiver_id = $rec.receiver.id; gross_amount = 1000.00 } | ConvertTo-Json
+$op = Invoke-RestMethod http://localhost:3000/operations -Method Post -Body $o -ContentType "application/json"
 
 # Confirmar
-Invoke-RestMethod "http://localhost:3000/operations//confirm" -Method Post
+Invoke-RestMethod "http://localhost:3000/operations/$($op.operation.id)/confirm" -Method Post
 
 # Ver saldo (deve mostrar R$ 970,00)
-Invoke-RestMethod "http://localhost:3000/receivers/"
-`
+Invoke-RestMethod "http://localhost:3000/receivers/$($rec.receiver.id)"
+```
 
 ---
 
-##  Deploy na AWS
+## 📁 Estrutura
 
-### Pré-requisitos
-- AWS CLI configurado
-- Terraform instalado
-- Docker instalado
-
----
-
-##  Estrutura
-
-`
+```
 summer-tech-challenge-2025/
- app.js                  # Express app
- database.js             # PostgreSQL connection
- routes/
-    receivers.js       # Endpoints recebedores
-    operations.js      # Endpoints operações
- infra/                 # Terraform (42 recursos AWS)
- docker-compose.yml     # Ambiente local
- Dockerfile             # Imagem Docker
- package.json           # Dependências
-`
+├── app.js                  # Express app
+├── database.js             # PostgreSQL connection
+├── routes/
+│   ├── receivers.js       # Endpoints recebedores
+│   └── operations.js      # Endpoints operações
+├── infra/                 # Terraform (42 recursos AWS)
+├── docker-compose.yml     # Ambiente local
+├── Dockerfile             # Imagem Docker
+└── package.json           # Dependências
+```
 
 ---
 
-##  Contato
+## 📞 Contato
 
-**Desenvolvido por:** [Enzo Urioste Canavero]
+**Desenvolvido por:** Enzo Urioste Canavero
 
--  [ecanavero2@gmail.com]
--  [+55(11)99496-0323]
+- 📧 ecanavero2@gmail.com
+- 📱 +55 (11) 99496-0323
 
 ---
 
 <div align="center">
 
-** Feito com dedicação para o LocPay Summer Job 2025**
+**💙 Feito com dedicação para o LocPay Summer Job 2025**
 
 </div>
